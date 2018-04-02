@@ -23,7 +23,6 @@ public class UserMapper {
         return User.builder()
                 .firstName(dto.getFirstName())
                 .lastName(dto.getLastName())
-                .role(dto.getRole())
                 .address(addressMapper.toEntity(dto.getAddress()))
                 .location(geoPointMapper.toEntity(dto.getLocation())).build();
     }
