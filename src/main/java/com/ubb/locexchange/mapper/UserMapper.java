@@ -2,6 +2,7 @@ package com.ubb.locexchange.mapper;
 
 import com.ubb.locexchange.domain.User;
 import com.ubb.locexchange.dto.UserDto;
+import org.springframework.data.geo.GeoResult;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -35,6 +36,11 @@ public class UserMapper {
                 .role(entity.getRole())
                 .address(addressMapper.toDto(entity.getAddress()))
                 .location(geoPointMapper.toDto(entity.getLocation())).build();
+    }
+
+    public UserDto toDto(final GeoResult<User> geoResult) {
+        final User user = geoResult.getContent();
+        return toDto(user);
     }
 
 }

@@ -22,18 +22,23 @@ public class User {
 
     @Id
     private String id;
+
     @NotNull
     private String firstName;
+
     @NotNull
     private String lastName;
+
     @Builder.Default
     private Role role = PROVIDER;
+
     @NotNull
     private Address address;
+
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     private GeoJsonPoint location;
+
     @Builder.Default
     private boolean available = true;
-
 
 }

@@ -16,6 +16,7 @@ public class GeoPointDto implements Serializable {
     private static final long serialVersionUID = -5223740492908559431L;
 
     private double x;
+
     private double y;
 
 }

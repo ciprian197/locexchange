@@ -9,7 +9,6 @@ import com.ubb.locexchange.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.geo.Distance;
-import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
@@ -25,6 +24,8 @@ import static com.ubb.locexchange.domain.Role.PROVIDER;
 @Slf4j
 @Service
 public class UserServiceImpl implements UserService {
+
+    private static final int MAXIMUM_QUERY_RESULTS = 5;
 
     private final Distance maxDistance;
     private final UserMapper userMapper;
@@ -43,26 +44,29 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Mono<UserDto> addUser(final UserDto userDto) {
-        final User user = userMapper.toEntity(userDto);
-        return userRepository.save(user)
+    public Mono<UserDto> addUser(final Mono<UserDto> userDto) {
+        return userDto.map(userMapper::toEntity)
+                .flatMap(userRepository::save)
                 .map(userMapper::toDto)
                 .doOnNext(u -> log.info("User created: {}", u));
     }
 
     @Override
-    public Flux<UserDto> findNearestAvailableProviders(final GeoPointDto pointDto) {
+    public Flux<UserDto> findNearestAvailableProviders(final Mono<GeoPointDto> pointDto) {
+        return pointDto.map(this::createNearQuery)
+                .flatMapMany(query -> mongoTemplate.geoNear(query, User.class))
+                .map(userMapper::toDto);
+    }
+
+    private NearQuery createNearQuery(final GeoPointDto pointDto) {
         final Query query = new Query(Criteria.where("role").is(PROVIDER).and("available").is(true));
         query.fields().include("firstName").include("lastName").include("location");
 
         final Point point = geoPointMapper.toPoint(pointDto);
         final NearQuery nearQuery = NearQuery.near(point).maxDistance(maxDistance);
         nearQuery.query(query);
-        nearQuery.num(5);
-
-        return mongoTemplate.geoNear(nearQuery, User.class)
-                .map(GeoResult::getContent)
-                .map(userMapper::toDto);
+        nearQuery.num(MAXIMUM_QUERY_RESULTS);
+        return nearQuery;
     }
 
 }

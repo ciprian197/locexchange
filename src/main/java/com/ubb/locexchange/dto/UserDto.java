@@ -8,8 +8,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
 import java.io.Serializable;
+
+import static com.ubb.locexchange.util.UserUtils.NAME_PATTERN;
 
 
 @Data
@@ -23,13 +26,19 @@ public class UserDto implements Serializable {
 
     @Id
     private String id;
-    @NotNull
+
+    @NotBlank
+    @Pattern(regexp = NAME_PATTERN, message = "{firstName.invalid}")
     private String firstName;
-    @NotNull
+
+    @NotBlank
+    @Pattern(regexp = NAME_PATTERN, message = "{lastName.invalid}")
     private String lastName;
+
     private Role role;
-    @NotNull
+
     private AddressDto address;
+
     private GeoPointDto location;
 
 }
