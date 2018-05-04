@@ -7,7 +7,7 @@ import reactor.core.publisher.Mono;
 
 public interface UserService {
 
-    Mono<UserDto> addUser(Mono<UserDto> userDto);
+    Mono<UserDto> addUser(UserDto userDto);
 
     Flux<UserDto> findNearestAvailableProviders(Mono<GeoPointDto> point);
 

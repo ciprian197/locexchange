@@ -8,7 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import java.io.Serializable;
 
@@ -27,11 +26,9 @@ public class UserDto implements Serializable {
     @Id
     private String id;
 
-    @NotBlank
     @Pattern(regexp = NAME_PATTERN, message = "{firstName.invalid}")
     private String firstName;
 
-    @NotBlank
     @Pattern(regexp = NAME_PATTERN, message = "{lastName.invalid}")
     private String lastName;
 

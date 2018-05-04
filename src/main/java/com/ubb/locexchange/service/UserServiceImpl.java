@@ -44,8 +44,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Mono<UserDto> addUser(final Mono<UserDto> userDto) {
-        return userDto.map(userMapper::toEntity)
+    public Mono<UserDto> addUser(final UserDto userDto) {
+        return Mono.just(userDto)
+                .map(userMapper::toEntity)
                 .flatMap(userRepository::save)
                 .map(userMapper::toDto)
                 .doOnNext(u -> log.info("User created: {}", u));
