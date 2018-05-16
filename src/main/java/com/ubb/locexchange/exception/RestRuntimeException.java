@@ -1,4 +1,4 @@
-package com.ubb.locexchange.controller.exception;
+package com.ubb.locexchange.exception;
 
 
 import lombok.Getter;

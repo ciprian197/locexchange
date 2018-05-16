@@ -1,12 +1,13 @@
 package com.ubb.locexchange.service;
 
-import com.ubb.locexchange.controller.exception.ResourceNotFoundExcetion;
 import com.ubb.locexchange.domain.User;
 import com.ubb.locexchange.dto.GeoPointDto;
 import com.ubb.locexchange.dto.UserDto;
+import com.ubb.locexchange.exception.ResourceNotFoundExcetion;
 import com.ubb.locexchange.mapper.GeoPointMapper;
 import com.ubb.locexchange.mapper.UserMapper;
 import com.ubb.locexchange.repository.UserRepository;
+import com.ubb.locexchange.service.validator.UserValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.geo.Distance;
@@ -23,8 +24,9 @@ import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
 
-import static com.ubb.locexchange.controller.exception.ErrorType.CANNOT_FIND_AVAILABLE_PROVIDERS;
 import static com.ubb.locexchange.domain.Role.PROVIDER;
+import static com.ubb.locexchange.exception.ErrorType.CAN_NOT_FIND_AVAILABLE_PROVIDERS;
+import static com.ubb.locexchange.exception.ErrorType.USER_DOES_NOT_EXIST;
 
 @Slf4j
 @Service
@@ -36,17 +38,20 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final GeoPointMapper geoPointMapper;
     private final UserRepository userRepository;
+    private final UserValidator userValidator;
     private final ReactiveMongoTemplate mongoTemplate;
     private final DistanceExternalService distanceExternalService;
 
     public UserServiceImpl(@Value("${distance.maximum.allowed}") final double maxDistance,
                            final UserMapper userMapper, final GeoPointMapper geoPointMapper,
-                           final UserRepository userRepository, final ReactiveMongoTemplate mongoTemplate,
+                           final UserRepository userRepository, final UserValidator userValidator,
+                           final ReactiveMongoTemplate mongoTemplate,
                            final DistanceExternalService distanceExternalService) {
         this.maxDistance = new Distance(maxDistance, Metrics.KILOMETERS);
         this.userMapper = userMapper;
         this.geoPointMapper = geoPointMapper;
         this.userRepository = userRepository;
+        this.userValidator = userValidator;
         this.mongoTemplate = mongoTemplate;
         this.distanceExternalService = distanceExternalService;
     }
@@ -61,6 +66,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Mono<UserDto> updateUserLocation(final String id, final GeoPointDto pointDto) {
+        return this.userRepository.findById(id)
+                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(USER_DOES_NOT_EXIST,
+                        String.format("Could not find user with id %s ", id))
+                ))
+                .doOnNext(userValidator::validateUserForLocationUpdate)
+                .map(user -> updateLocation(user, pointDto))
+                .flatMap(userRepository::save)
+                .map(userMapper::toDto);
+    }
+
+    @Override
     public Mono<UserDto> findClosestAvailableProvider(final GeoPointDto geoPointDto) {
         return this.findClosestAvailableProviders(geoPointDto, MAXIMUM_QUERY_RESULTS)
                 .collectList()
@@ -69,7 +86,7 @@ public class UserServiceImpl implements UserService {
                 .timeout(Duration.ofMillis(3000))
                 .onErrorResume(e -> findClosestAvailableProviders(geoPointDto, 1)
                         .next()
-                        .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(CANNOT_FIND_AVAILABLE_PROVIDERS,
+                        .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(CAN_NOT_FIND_AVAILABLE_PROVIDERS,
                                 String.format("Could not find any provider for the location with latitude %s " +
                                         "and longitude %s", geoPointDto.getY(), geoPointDto.getX()))
                         )));
@@ -80,7 +97,7 @@ public class UserServiceImpl implements UserService {
                 .map(point -> this.createNearQuery(point, queryResults))
                 .flatMapMany(query -> mongoTemplate.geoNear(query, User.class))
                 .map(userMapper::toDto)
-                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(CANNOT_FIND_AVAILABLE_PROVIDERS,
+                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(CAN_NOT_FIND_AVAILABLE_PROVIDERS,
                         String.format("Could not find any provider for the location with latitude %s " +
                                 "and longitude %s", pointDto.getY(), pointDto.getX()))
                 ));
@@ -95,6 +112,11 @@ public class UserServiceImpl implements UserService {
         nearQuery.query(query);
         nearQuery.num(queryResults);
         return nearQuery;
+    }
+
+    private User updateLocation(final User user, final GeoPointDto pointDto) {
+        user.setLocation(geoPointMapper.toEntity(pointDto));
+        return user;
     }
 
 }

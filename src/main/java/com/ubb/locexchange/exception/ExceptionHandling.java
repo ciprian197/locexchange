@@ -1,4 +1,4 @@
-package com.ubb.locexchange.controller.exception;
+package com.ubb.locexchange.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,20 +11,26 @@ import org.springframework.web.bind.support.WebExchangeBindException;
 public class ExceptionHandling {
 
     @ExceptionHandler
-    private ResponseEntity<String> handleException(final WebExchangeBindException ex) {
+    private ResponseEntity<ErrorView> handleException(final WebExchangeBindException ex) {
         final String errorMessage = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(FieldError::getDefaultMessage)
                 .reduce((a, b) -> a + "\n" + b)
                 .orElse("Cannot display errors");
-        return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ErrorView(ErrorType.VALIDATION_ERROR, errorMessage), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
-    private ResponseEntity<ErrorView> handleException(final ResourceNotFoundExcetion ex) {
+    private ResponseEntity<ErrorView> handleException(final RestRuntimeException ex) {
 
         return new ResponseEntity<>(new ErrorView(ex.getErrorType(), ex.getMessage()), HttpStatus.NOT_FOUND);
+
+    }
+
+    private ResponseEntity<ErrorView> handleException(final InvalidDataException ex) {
+
+        return new ResponseEntity<>(new ErrorView(ex.getErrorType(), ex.getMessage()), HttpStatus.UNPROCESSABLE_ENTITY);
 
     }
 
