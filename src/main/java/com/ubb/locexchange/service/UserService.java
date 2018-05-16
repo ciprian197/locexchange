@@ -9,6 +9,6 @@ public interface UserService {
 
     Mono<UserDto> addUser(UserDto userDto);
 
-    Flux<UserDto> findNearestAvailableProviders(Mono<GeoPointDto> point);
+    Mono<UserDto> findClosestAvailableProvider(GeoPointDto geoPointDto);
 
 }

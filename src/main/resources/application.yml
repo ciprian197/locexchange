@@ -4,9 +4,15 @@ spring:
     data:
         mongodb:
             uri: mongodb://localhost:27017/locexchange
+
 distance:
     maximum:
         allowed: 10
+
 logging:
   level:
     locexchange: "INFO"
+
+google-maps:
+    api:
+        key:

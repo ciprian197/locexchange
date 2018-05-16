@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
@@ -23,8 +22,8 @@ public class UserController {
     }
 
     @PostMapping("/closest")
-    public Flux<UserDto> findClosestUsers(@RequestBody final Mono<GeoPointDto> point) {
-        return userService.findNearestAvailableProviders(point);
+    public Mono<UserDto> findClosestUser(@RequestBody final Mono<GeoPointDto> point) {
+        return point.flatMap(userService::findClosestAvailableProvider);
     }
 
     @PostMapping

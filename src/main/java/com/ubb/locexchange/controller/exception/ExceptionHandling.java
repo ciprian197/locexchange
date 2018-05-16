@@ -12,13 +12,20 @@ public class ExceptionHandling {
 
     @ExceptionHandler
     private ResponseEntity<String> handleException(final WebExchangeBindException ex) {
-        String errorMessage = ex.getBindingResult()
+        final String errorMessage = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(FieldError::getDefaultMessage)
                 .reduce((a, b) -> a + "\n" + b)
                 .orElse("Cannot display errors");
         return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    private ResponseEntity<ErrorView> handleException(final ResourceNotFoundExcetion ex) {
+
+        return new ResponseEntity<>(new ErrorView(ex.getErrorType(), ex.getMessage()), HttpStatus.NOT_FOUND);
+
     }
 
 }

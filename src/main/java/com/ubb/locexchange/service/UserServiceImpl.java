@@ -1,5 +1,6 @@
 package com.ubb.locexchange.service;
 
+import com.ubb.locexchange.controller.exception.ResourceNotFoundExcetion;
 import com.ubb.locexchange.domain.User;
 import com.ubb.locexchange.dto.GeoPointDto;
 import com.ubb.locexchange.dto.UserDto;
@@ -18,7 +19,11 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.time.Duration;
+
+import static com.ubb.locexchange.controller.exception.ErrorType.CANNOT_FIND_AVAILABLE_PROVIDERS;
 import static com.ubb.locexchange.domain.Role.PROVIDER;
 
 @Slf4j
@@ -32,15 +37,18 @@ public class UserServiceImpl implements UserService {
     private final GeoPointMapper geoPointMapper;
     private final UserRepository userRepository;
     private final ReactiveMongoTemplate mongoTemplate;
+    private final DistanceExternalService distanceExternalService;
 
     public UserServiceImpl(@Value("${distance.maximum.allowed}") final double maxDistance,
                            final UserMapper userMapper, final GeoPointMapper geoPointMapper,
-                           final UserRepository userRepository, final ReactiveMongoTemplate mongoTemplate) {
+                           final UserRepository userRepository, final ReactiveMongoTemplate mongoTemplate,
+                           final DistanceExternalService distanceExternalService) {
         this.maxDistance = new Distance(maxDistance, Metrics.KILOMETERS);
         this.userMapper = userMapper;
         this.geoPointMapper = geoPointMapper;
         this.userRepository = userRepository;
         this.mongoTemplate = mongoTemplate;
+        this.distanceExternalService = distanceExternalService;
     }
 
     @Override
@@ -53,20 +61,39 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Flux<UserDto> findNearestAvailableProviders(final Mono<GeoPointDto> pointDto) {
-        return pointDto.map(this::createNearQuery)
-                .flatMapMany(query -> mongoTemplate.geoNear(query, User.class))
-                .map(userMapper::toDto);
+    public Mono<UserDto> findClosestAvailableProvider(final GeoPointDto geoPointDto) {
+        return this.findClosestAvailableProviders(geoPointDto, MAXIMUM_QUERY_RESULTS)
+                .collectList()
+                .publishOn(Schedulers.elastic())
+                .map(users -> distanceExternalService.getClosestUser(users, geoPointDto))
+                .timeout(Duration.ofMillis(3000))
+                .onErrorResume(e -> findClosestAvailableProviders(geoPointDto, 1)
+                        .next()
+                        .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(CANNOT_FIND_AVAILABLE_PROVIDERS,
+                                String.format("Could not find any provider for the location with latitude %s " +
+                                        "and longitude %s", geoPointDto.getY(), geoPointDto.getX()))
+                        )));
     }
 
-    private NearQuery createNearQuery(final GeoPointDto pointDto) {
+    private Flux<UserDto> findClosestAvailableProviders(final GeoPointDto pointDto, final int queryResults) {
+        return Mono.just(pointDto)
+                .map(point -> this.createNearQuery(point, queryResults))
+                .flatMapMany(query -> mongoTemplate.geoNear(query, User.class))
+                .map(userMapper::toDto)
+                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(CANNOT_FIND_AVAILABLE_PROVIDERS,
+                        String.format("Could not find any provider for the location with latitude %s " +
+                                "and longitude %s", pointDto.getY(), pointDto.getX()))
+                ));
+    }
+
+    private NearQuery createNearQuery(final GeoPointDto pointDto, final int queryResults) {
         final Query query = new Query(Criteria.where("role").is(PROVIDER).and("available").is(true));
         query.fields().include("firstName").include("lastName").include("location");
 
         final Point point = geoPointMapper.toPoint(pointDto);
         final NearQuery nearQuery = NearQuery.near(point).maxDistance(maxDistance);
         nearQuery.query(query);
-        nearQuery.num(MAXIMUM_QUERY_RESULTS);
+        nearQuery.num(queryResults);
         return nearQuery;
     }
 
