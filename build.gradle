@@ -23,13 +23,15 @@ repositories {
 
 
 dependencies {
-    compile('org.springframework.boot:spring-boot-starter-webflux')
-    compile('org.springframework.boot:spring-boot-starter-data-mongodb-reactive')
-    compile('org.springframework.boot:spring-boot-starter-validation')
+    compile("org.springframework.boot:spring-boot-starter-webflux")
+    compile("org.springframework.boot:spring-boot-starter-websocket")
+    compile("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
+    compile("org.springframework.boot:spring-boot-starter-validation")
+    compile("org.springframework.boot:spring-boot-starter-security")
     compile("com.google.maps:google-maps-services:${googleMapsServices}")
-    compileOnly('org.projectlombok:lombok')
-    testCompile('org.springframework.boot:spring-boot-starter-test')
-    testCompile('io.projectreactor:reactor-test')
+    compileOnly("org.projectlombok:lombok")
+    testCompile("org.springframework.boot:spring-boot-starter-test")
+    testCompile("io.projectreactor:reactor-test")
 }
 
 jar {

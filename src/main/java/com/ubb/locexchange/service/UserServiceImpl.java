@@ -1,7 +1,9 @@
 package com.ubb.locexchange.service;
 
 import com.ubb.locexchange.domain.User;
+import com.ubb.locexchange.domain.UserStatus;
 import com.ubb.locexchange.dto.GeoPointDto;
+import com.ubb.locexchange.dto.UpdateUserDto;
 import com.ubb.locexchange.dto.UserDto;
 import com.ubb.locexchange.exception.ResourceNotFoundExcetion;
 import com.ubb.locexchange.mapper.GeoPointMapper;
@@ -25,6 +27,7 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Duration;
 
 import static com.ubb.locexchange.domain.Role.PROVIDER;
+import static com.ubb.locexchange.domain.UserStatus.CONNECTED;
 import static com.ubb.locexchange.exception.ErrorType.CAN_NOT_FIND_AVAILABLE_PROVIDERS;
 import static com.ubb.locexchange.exception.ErrorType.USER_DOES_NOT_EXIST;
 
@@ -66,13 +69,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Mono<UserDto> updateUserLocation(final String id, final GeoPointDto pointDto) {
-        return this.userRepository.findById(id)
-                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(USER_DOES_NOT_EXIST,
-                        String.format("Could not find user with id %s ", id))
-                ))
-                .doOnNext(userValidator::validateUserForLocationUpdate)
-                .map(user -> updateLocation(user, pointDto))
+    public Mono<UserDto> updateUser(final String id, final UpdateUserDto updateUserDto) {
+        return getUserById(id)
+                .map(user -> updateUser(user, updateUserDto))
                 .flatMap(userRepository::save)
                 .map(userMapper::toDto);
     }
@@ -84,12 +83,23 @@ public class UserServiceImpl implements UserService {
                 .publishOn(Schedulers.elastic())
                 .map(users -> distanceExternalService.getClosestUser(users, geoPointDto))
                 .timeout(Duration.ofMillis(3000))
-                .onErrorResume(e -> findClosestAvailableProviders(geoPointDto, 1)
-                        .next()
-                        .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(CAN_NOT_FIND_AVAILABLE_PROVIDERS,
-                                String.format("Could not find any provider for the location with latitude %s " +
-                                        "and longitude %s", geoPointDto.getY(), geoPointDto.getX()))
-                        )));
+                .onErrorResume(e -> findClosestAvailableProviderInternal(geoPointDto));
+    }
+
+    private Mono<UserDto> findClosestAvailableProviderInternal(final GeoPointDto geoPointDto) {
+        return findClosestAvailableProviders(geoPointDto, 1)
+                .next()
+                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(CAN_NOT_FIND_AVAILABLE_PROVIDERS,
+                        String.format("Could not find any provider for the location with latitude %s " +
+                                "and longitude %s", geoPointDto.getY(), geoPointDto.getX()))
+                ));
+    }
+
+    private Mono<User> getUserById(final String id) {
+        return this.userRepository.findById(id)
+                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(USER_DOES_NOT_EXIST,
+                        String.format("Could not find user with id %s ", id))
+                ));
     }
 
     private Flux<UserDto> findClosestAvailableProviders(final GeoPointDto pointDto, final int queryResults) {
@@ -104,7 +114,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private NearQuery createNearQuery(final GeoPointDto pointDto, final int queryResults) {
-        final Query query = new Query(Criteria.where("role").is(PROVIDER).and("available").is(true));
+        final Query query = new Query(Criteria.where("role").is(PROVIDER).and("userStatus").is(CONNECTED));
         query.fields().include("firstName").include("lastName").include("location");
 
         final Point point = geoPointMapper.toPoint(pointDto);
@@ -114,8 +124,17 @@ public class UserServiceImpl implements UserService {
         return nearQuery;
     }
 
-    private User updateLocation(final User user, final GeoPointDto pointDto) {
-        user.setLocation(geoPointMapper.toEntity(pointDto));
+    private User updateUser(final User user, final UpdateUserDto updateUserDto) {
+        final GeoPointDto location = updateUserDto.getLocation();
+        if (location != null) {
+            userValidator.validateUserForLocationUpdate(user);
+            user.setLocation(geoPointMapper.toEntity(location));
+        }
+
+        final UserStatus userStatus = updateUserDto.getUserStatus();
+        if (userStatus != null) {
+            user.setUserStatus(userStatus);
+        }
         return user;
     }
 

@@ -5,6 +5,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotNull;
@@ -24,6 +25,10 @@ public class User {
     private String id;
 
     @NotNull
+    @Indexed(unique = true)
+    private String username;
+
+    @NotNull
     private String firstName;
 
     @NotNull
@@ -39,6 +44,6 @@ public class User {
     private GeoJsonPoint location;
 
     @Builder.Default
-    private boolean available = true;
+    private UserStatus userStatus = UserStatus.DISCONECTED;
 
 }

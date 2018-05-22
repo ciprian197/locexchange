@@ -23,11 +23,13 @@ public class UserController {
         return userDto.flatMap(userService::addUser);
     }
 
-    @PostMapping("/update/location/{id}")
-    public Mono<UserDto> updateUserLocation(@PathVariable final String id,
-                                            @RequestBody @Valid final Mono<GeoPointDto> pointDto) {
-        return pointDto.flatMap(point -> this.userService.updateUserLocation(id, point));
-    }
+//    @PostMapping("/update/location/{id}")
+//    public Mono<UserDto> updateUserLocation(@PathVariable final String id,
+//                                            @RequestBody @Valid final Mono<GeoPointDto> pointDto) {
+//        return pointDto.flatMap(point -> {
+//            this.userService.updateUserLocation(id, point)
+//        });
+//    }
 
     @PostMapping("/closest")
     public Mono<UserDto> findClosestUser(@RequestBody @Valid final Mono<GeoPointDto> point) {
