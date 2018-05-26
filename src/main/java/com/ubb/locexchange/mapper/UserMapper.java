@@ -32,6 +32,7 @@ public class UserMapper {
     public UserDto toDto(final User entity) {
         return UserDto.builder()
                 .id(entity.getId())
+                .webSessionId(entity.getWebSessionId())
                 .username(entity.getUsername())
                 .firstName(entity.getFirstName())
                 .lastName(entity.getLastName())

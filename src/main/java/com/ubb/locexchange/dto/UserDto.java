@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
-import org.springframework.data.annotation.Id;
 
 import javax.validation.constraints.Pattern;
 import java.io.Serializable;
@@ -25,8 +24,9 @@ public class UserDto implements Serializable {
 
     private static final long serialVersionUID = 2253559000626589487L;
 
-    @Id
     private String id;
+
+    private String webSessionId;
 
     @Length(min = 4, max = 15, message = "{username.invalid.length}")
     @Pattern(regexp = USERNAME_PATTERN, message = "{username.invalid")

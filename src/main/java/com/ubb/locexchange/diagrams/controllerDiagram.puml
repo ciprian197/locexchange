@@ -1,0 +1,66 @@
+@startuml
+
+class UserController
+class UserServiceImpl
+class DistanceExternalServiceImpl
+interface "ReactiveMongoRepository<T,E>" as MongoRepository_String_User
+interface UserService
+interface UserRepository
+interface DistanceExternalService
+
+UserService <|.. UserServiceImpl
+UserController *-- UserService
+UserServiceImpl *-- UserRepository
+MongoRepository_String_User <|-- UserRepository
+UserServiceImpl *-- DistanceExternalService
+DistanceExternalService <|.. DistanceExternalServiceImpl
+
++class UserController{
+-UserService userService
++UserController(userService: UserService)
++createUser(userDto: Mono<UserDto>)
++getClosestProvider(geoPointDto: Mono<GeoPointDto>)
+}
+
++interface UserService{
+Mono<UserDto> addUser(userDto: UserDto)
+Mono<UserDto> updateUserBySessionId(webSessionId: String, updateUserDto: UpdateUserDto)
+Mono<UserDto> updateUser(username: String, updateUserDto: UpdateUserDto)
+Mono<UserDto> findClosestAvailableProvider(geoPointDto: GeoPointDto);
+Mono<UserDto> removeWebSessionId(webSessionId: String);
+}
+
+~class UserServiceImpl{
+-UserRepository userRepository
+-Distance maxDistance;
+-UserMapper userMapper;
+-GeoPointMapper geoPointMapper;
+-UserRepository userRepository;
+-UserValidator userValidator;
+-ReactiveMongoTemplate mongoTemplate;
+-DistanceExternalService distanceExternalService;
+-Mono<User> findClosestAvailableProviderInternal(geoPointDto: GeoPointDto)
+-Mono<User> getUserBySessionId(webSessionId: String)
+-Mono<User> getUserByUsername(username: String)
+-Flux<User> findClosestAvailableProviders(pointDto: GeoPointDto, queryResults: int)
+-NearQuery createNearQuery(pointDto: GeoPointDto, queryResults: int)
+-User updateUser(final User user, final UpdateUserDto updateUserDto)
+}
+
++interface UserRepository{
++Mono<User> findByUsername(username: String
++Mono<User> findByWebSessionId(webSessionId: String)
+}
+
++interface DistanceExternalService{
+User getClosestUser(users: List<User>, point: GeoPointDto)
+}
+
+~class DistanceExternalServiceImpl{
+-String googleApiKey
+-int findClosest(distanceMatrix: DistanceMatrix)
+-String getOrigins(users: List<User>)
+-String geoJsonPointAsString(geoJsonPoint: GeoJsonPoint)
+-String geoPointDtoAsString(geoPointDto: GeoPointDto)
+}
+@enduml

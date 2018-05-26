@@ -4,6 +4,6 @@ public enum UserStatus {
 
     CONNECTED,
     IN_MISSION,
-    DISCONECTED;
+    DISCONNECTED;
 
 }

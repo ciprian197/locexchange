@@ -24,10 +24,11 @@ repositories {
 
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-webflux")
-    compile("org.springframework.boot:spring-boot-starter-websocket")
+
     compile("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
+    compile("org.springframework.boot:spring-boot-starter-integration")
     compile("org.springframework.boot:spring-boot-starter-validation")
-    compile("org.springframework.boot:spring-boot-starter-security")
+    compile("io.netty:netty-transport-native-epoll:4.1.22.Final:linux-x86_64")
     compile("com.google.maps:google-maps-services:${googleMapsServices}")
     compileOnly("org.projectlombok:lombok")
     testCompile("org.springframework.boot:spring-boot-starter-test")

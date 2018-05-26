@@ -4,18 +4,20 @@ import com.google.maps.DistanceMatrixApi;
 import com.google.maps.GeoApiContext;
 import com.google.maps.model.DistanceMatrix;
 import com.google.maps.model.DistanceMatrixElement;
+import com.ubb.locexchange.domain.User;
 import com.ubb.locexchange.dto.GeoPointDto;
-import com.ubb.locexchange.dto.UserDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.stereotype.Service;
+import reactor.core.Exceptions;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class DistanceExternalServiceImpl implements DistanceExternalService {
+class DistanceExternalServiceImpl implements DistanceExternalService {
 
     private final String googleApiKey;
 
@@ -24,16 +26,17 @@ public class DistanceExternalServiceImpl implements DistanceExternalService {
     }
 
     @Override
-    public UserDto getClosestUser(final List<UserDto> users, final GeoPointDto point) {
+    public User getClosestUser(final List<User> users, final GeoPointDto point) {
         final GeoApiContext geoApiContext = new GeoApiContext.Builder()
                 .apiKey(googleApiKey).build();
 
         try {
-            return users.get(findClosest(DistanceMatrixApi.getDistanceMatrix(geoApiContext,
-                    getOrigins(users), new String[]{geoPointAsString(point)}).await()));
+            return users.get(
+                    findClosest(DistanceMatrixApi.getDistanceMatrix(geoApiContext, getOrigins(users),
+                            new String[]{geoPointDtoAsString(point)}).await()));
         } catch (final Exception e) {
             // Wrap caught exception into a RuntimeException to be able to handle it inside of the reactive chain
-            throw new RuntimeException(e);
+            throw Exceptions.propagate(e);
         }
     }
 
@@ -52,15 +55,20 @@ public class DistanceExternalServiceImpl implements DistanceExternalService {
         return position;
     }
 
-    private String[] getOrigins(final List<UserDto> users) {
+    private String[] getOrigins(final List<User> users) {
         return users.stream()
-                .map(userDto -> geoPointAsString(userDto.getLocation()))
+                .map(user -> geoJsonPointAsString(user.getLocation()))
                 .collect(Collectors.toList())
                 .toArray(new String[users.size()]);
     }
 
     // Here we have y before x because y is the latitude and x the longitude
-    private String geoPointAsString(final GeoPointDto geoPointDto) {
+    private String geoJsonPointAsString(final GeoJsonPoint geoJsonPoint) {
+        return geoJsonPoint.getY() + "," + geoJsonPoint.getX();
+    }
+
+    // Here we have y before x because y is the latitude and x the longitude
+    private String geoPointDtoAsString(final GeoPointDto geoPointDto) {
         return geoPointDto.getY() + "," + geoPointDto.getX();
     }
 

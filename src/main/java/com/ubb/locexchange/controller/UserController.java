@@ -3,11 +3,16 @@ package com.ubb.locexchange.controller;
 import com.ubb.locexchange.dto.GeoPointDto;
 import com.ubb.locexchange.dto.UserDto;
 import com.ubb.locexchange.service.UserService;
-import org.springframework.web.bind.annotation.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/users")
 public class UserController {
@@ -23,16 +28,8 @@ public class UserController {
         return userDto.flatMap(userService::addUser);
     }
 
-//    @PostMapping("/update/location/{id}")
-//    public Mono<UserDto> updateUserLocation(@PathVariable final String id,
-//                                            @RequestBody @Valid final Mono<GeoPointDto> pointDto) {
-//        return pointDto.flatMap(point -> {
-//            this.userService.updateUserLocation(id, point)
-//        });
-//    }
-
     @PostMapping("/closest")
-    public Mono<UserDto> findClosestUser(@RequestBody @Valid final Mono<GeoPointDto> point) {
+    public Mono<UserDto> getClosestProvider(@RequestBody @Valid final Mono<GeoPointDto> point) {
         return point.flatMap(userService::findClosestAvailableProvider);
     }
 

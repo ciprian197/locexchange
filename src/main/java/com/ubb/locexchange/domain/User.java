@@ -24,6 +24,8 @@ public class User {
     @Id
     private String id;
 
+    private String webSessionId;
+
     @NotNull
     @Indexed(unique = true)
     private String username;
@@ -44,6 +46,6 @@ public class User {
     private GeoJsonPoint location;
 
     @Builder.Default
-    private UserStatus userStatus = UserStatus.DISCONECTED;
+    private UserStatus userStatus = UserStatus.DISCONNECTED;
 
 }

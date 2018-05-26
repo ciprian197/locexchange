@@ -1,0 +1,44 @@
+@startuml
+
+enum UserStatus
+enum Role
+class User
+class Address
+
+User *-- Role
+User *-- Address
+User *-- UserStatus
+
+class User {
+-String id
+-String webSessionId
+-String username
+-String firstName
+-String lastName
+-Role role
+-Address address
+-GeoJsonPoint location
+-UserStatus userStatus
+}
+
+class Address {
+-String id
+-String country
+-String city
+-String street
+-int number
+-int apartmentNumber
+}
+
+enum Role {
+    PROVIDER
+    CLIENT
+}
+
+enum UserStatus {
+    CONNECTED
+    IN_MISSION
+    DISCONNECTED
+}
+
+@enduml
