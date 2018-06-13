@@ -93,8 +93,8 @@ class UserServiceImpl implements UserService {
                 .publishOn(Schedulers.elastic())
                 .map(users -> distanceExternalService.getClosestUser(users, geoPointDto))
                 .timeout(Duration.ofMillis(MAXIMUM_COMPUTATION_DURATION_USING_EXTERNAL_SERVICE))
-                .doOnError(e -> log.info("Computing closest provider using Google Maps Service has failed, will proceeed " +
-                        "with fallback function"))
+                .doOnError(e -> log.info("Computing closest provider using Google Maps Service has failed, " +
+                        "will proceeed with fallback function"))
                 .onErrorResume(e -> findClosestAvailableProviderInternal(geoPointDto))
                 .flatMap(user -> {
                     final UpdateUserDto updateUserDto = UpdateUserDto.builder()
@@ -118,25 +118,7 @@ class UserServiceImpl implements UserService {
 
     private Mono<User> findClosestAvailableProviderInternal(final GeoPointDto geoPointDto) {
         return findClosestAvailableProviders(geoPointDto, 1)
-                .next()
-                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(CAN_NOT_FIND_AVAILABLE_PROVIDERS,
-                        String.format("Could not find any provider for the location with latitude %s " +
-                                "and longitude %s", geoPointDto.getY(), geoPointDto.getX()))
-                ));
-    }
-
-    private Mono<User> getUserBySessionId(final String webSessionId) {
-        return this.userRepository.findByWebSessionId(webSessionId)
-                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(USER_DOES_NOT_EXIST,
-                        String.format("Could not find user with web session id %s ", webSessionId))
-                ));
-    }
-
-    private Mono<User> getUserByUsername(final String username) {
-        return this.userRepository.findByUsername(username)
-                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(USER_DOES_NOT_EXIST,
-                        String.format("Could not find user with username %s ", username))
-                ));
+                .next();
     }
 
     private Flux<User> findClosestAvailableProviders(final GeoPointDto pointDto, final int queryResults) {
@@ -159,6 +141,21 @@ class UserServiceImpl implements UserService {
         nearQuery.query(query);
         nearQuery.num(queryResults);
         return nearQuery;
+    }
+
+
+    private Mono<User> getUserBySessionId(final String webSessionId) {
+        return this.userRepository.findByWebSessionId(webSessionId)
+                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(USER_DOES_NOT_EXIST,
+                        String.format("Could not find user with web session id %s ", webSessionId))
+                ));
+    }
+
+    private Mono<User> getUserByUsername(final String username) {
+        return this.userRepository.findByUsername(username)
+                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(USER_DOES_NOT_EXIST,
+                        String.format("Could not find user with username %s ", username))
+                ));
     }
 
     private User updateUser(final User user, final UpdateUserDto updateUserDto) {

@@ -1,0 +1,7 @@
+@startuml
+
+Provider --> (Register)
+Provider --> (Update location)
+Provider -> (Receive stream of location from client)
+
+@enduml

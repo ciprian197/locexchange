@@ -3,64 +3,116 @@
 class UserController
 class UserServiceImpl
 class DistanceExternalServiceImpl
+class UserMapper
+class GeoPointMapper
+class UserValidator
+class ReactiveWebSocketConfiguration
+class ClientConnectionWebSocketHandler
+class ProviderConnectionWebSocketHandler
 interface "ReactiveMongoRepository<T,E>" as MongoRepository_String_User
 interface UserService
 interface UserRepository
 interface DistanceExternalService
+interface WebSocketHandler
 
 UserService <|.. UserServiceImpl
 UserController *-- UserService
-UserServiceImpl *-- UserRepository
+UserServiceImpl *-right- UserRepository
 MongoRepository_String_User <|-- UserRepository
 UserServiceImpl *-- DistanceExternalService
+UserServiceImpl *-- UserValidator
+UserServiceImpl *-- UserMapper
+UserServiceImpl *-- GeoPointMapper
+UserMapper *-left- GeoPointMapper
+UserMapper *-- AddressMapper
 DistanceExternalService <|.. DistanceExternalServiceImpl
 
+WebSocketHandler <|.down. ClientConnectionWebSocketHandler
+WebSocketHandler <|.down. ProviderConnectionWebSocketHandler
+ReactiveWebSocketConfiguration *-right- ClientConnectionWebSocketHandler
+ReactiveWebSocketConfiguration *-left- ProviderConnectionWebSocketHandler
+ClientConnectionWebSocketHandler *-- UserService
+ProviderConnectionWebSocketHandler *-- UserService
+
 +class UserController{
--UserService userService
-+UserController(userService: UserService)
-+createUser(userDto: Mono<UserDto>)
-+getClosestProvider(geoPointDto: Mono<GeoPointDto>)
++createUser(userDto: Mono<UserDto>): Mono<UserDto>
++getClosestProvider(geoPointDto: Mono<GeoPointDto>): Mono<UserDto>
 }
 
 +interface UserService{
-Mono<UserDto> addUser(userDto: UserDto)
-Mono<UserDto> updateUserBySessionId(webSessionId: String, updateUserDto: UpdateUserDto)
-Mono<UserDto> updateUser(username: String, updateUserDto: UpdateUserDto)
-Mono<UserDto> findClosestAvailableProvider(geoPointDto: GeoPointDto);
-Mono<UserDto> removeWebSessionId(webSessionId: String);
+addUser(userDto: UserDto): Mono<UserDto>
+updateUserBySessionId(webSessionId: String, updateUserDto: UpdateUserDto): Mono<UserDto>
+updateUser(username: String, updateUserDto: UpdateUserDto): Mono<UserDto>
+findClosestAvailableProvider(geoPointDto: GeoPointDto): Mono<UserDto>
+removeWebSessionId(webSessionId: String): Mono<UserDto>
 }
 
 ~class UserServiceImpl{
--UserRepository userRepository
 -Distance maxDistance;
--UserMapper userMapper;
--GeoPointMapper geoPointMapper;
--UserRepository userRepository;
--UserValidator userValidator;
 -ReactiveMongoTemplate mongoTemplate;
--DistanceExternalService distanceExternalService;
--Mono<User> findClosestAvailableProviderInternal(geoPointDto: GeoPointDto)
--Mono<User> getUserBySessionId(webSessionId: String)
--Mono<User> getUserByUsername(username: String)
--Flux<User> findClosestAvailableProviders(pointDto: GeoPointDto, queryResults: int)
--NearQuery createNearQuery(pointDto: GeoPointDto, queryResults: int)
--User updateUser(final User user, final UpdateUserDto updateUserDto)
+-findClosestAvailableProviderInternal(geoPointDto: GeoPointDto): Mono<User>
+-getUserBySessionId(webSessionId: String): Mono<User>
+-getUserByUsername(username: String): Mono<User>
+-findClosestAvailableProviders(pointDto: GeoPointDto, queryResults: int): Flux<User>
+-createNearQuery(pointDto: GeoPointDto, queryResults: int): NearQuery
+-updateUser(final User user, final UpdateUserDto updateUserDto): User
 }
 
 +interface UserRepository{
-+Mono<User> findByUsername(username: String
-+Mono<User> findByWebSessionId(webSessionId: String)
++findByUsername(username: String): Mono<User>
++findByWebSessionId(webSessionId: String): Mono<User>
 }
 
 +interface DistanceExternalService{
-User getClosestUser(users: List<User>, point: GeoPointDto)
+getClosestUser(users: List<User>, point: GeoPointDto): User
 }
 
 ~class DistanceExternalServiceImpl{
 -String googleApiKey
--int findClosest(distanceMatrix: DistanceMatrix)
--String getOrigins(users: List<User>)
--String geoJsonPointAsString(geoJsonPoint: GeoJsonPoint)
--String geoPointDtoAsString(geoPointDto: GeoPointDto)
+-findClosest(distanceMatrix: DistanceMatrix): int
+-getOrigins(users: List<User>): String
+-geoJsonPointAsString(geoJsonPoint: GeoJsonPoint): String
+-geoPointDtoAsString(geoPointDto: GeoPointDto): String
 }
+
++class UserValidator{
++validateUserForLocationUpdate(user: User): void
+}
+
++class UserMapper{
++toEntity(dto: UserDto): User
++toDto(user: User): UserDto
+}
+
++class GeoPointMapper{
++toPoint(dto: GeoPointDto): Point
++toDto(point: GeoJsonPoint): GeoPointDto
++toEntity(dto: GeoPointDto): GeoJsonPoint
+}
+
++class AddressMapper{
++toEntity(dto: AddressDto): Address
++toDto(address: Address): AddressDto
+}
+
+
++interface WebSocketHandler{
++handle(session: WebSocketSession): Mono<Void>
+}
+
++class ClientConnectionWebSocketHandler{
+-checkIfSessionIsSavedAndUpdateProviderStatus(session: WebSocketSession, providerSessionId: String): void
+}
+
++class ProviderConnectionWebSocketHandler{
++updateUser(webSocketSession: WebSocketSession, dto: LocationExchangeDto): Mono<UserDto>
++closeWebSocketSession(webSocketSession: WebSocketSession): void
++createUpdateUserDto(locationExchangeDto: LocationExchangeDto, webSessionId: String): UpdateUserDto
+}
+
+class ReactiveWebSocketConfiguration{
++webSocketHandlerMapping(): HandlerMapping
++handlerAdapter(): WebSocketHandlerAdapter
+}
+
 @enduml

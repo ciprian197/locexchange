@@ -28,7 +28,7 @@ public class UserController {
         return userDto.flatMap(userService::addUser);
     }
 
-    @PostMapping("/closest")
+    @PostMapping("/provider/closest")
     public Mono<UserDto> getClosestProvider(@RequestBody @Valid final Mono<GeoPointDto> point) {
         return point.flatMap(userService::findClosestAvailableProvider);
     }

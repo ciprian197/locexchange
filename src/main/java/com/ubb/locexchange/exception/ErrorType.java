@@ -13,7 +13,8 @@ public enum ErrorType {
     CAN_NOT_FIND_AVAILABLE_PROVIDERS(Value.CAN_NOT_FIND_AVAILABLE_PROVIDERS,
             "Can not find available providers for the given location"),
     USER_DOES_NOT_EXIST(Value.USER_DOES_NOT_EXIST, "User does not exist"),
-    CAN_NOT_UPDATE_LOCATION_FOR_USER(Value.CAN_NOT_UPDATE_LOCATION_FOR_USER, "Can not update location for user");
+    CAN_NOT_UPDATE_LOCATION_FOR_USER(Value.CAN_NOT_UPDATE_LOCATION_FOR_USER, "Can not update location for user"),
+    SESSION_DOES_NOT_EXIST(Value.SESSION_DOES_NOT_EXIST, "Session does not exist");
 
     private String code;
     private String description;
@@ -27,6 +28,7 @@ public enum ErrorType {
         private static final String CAN_NOT_FIND_AVAILABLE_PROVIDERS = PREFIX + "1001";
         private static final String USER_DOES_NOT_EXIST = PREFIX + "1002";
         private static final String CAN_NOT_UPDATE_LOCATION_FOR_USER = PREFIX + "1003";
+        private static final String SESSION_DOES_NOT_EXIST = PREFIX + "1003";
 
     }
 

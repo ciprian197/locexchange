@@ -41,9 +41,9 @@ public class UserMapper {
                 .location(geoPointMapper.toDto(entity.getLocation())).build();
     }
 
-    public UserDto toDto(final GeoResult<User> geoResult) {
-        final User user = geoResult.getContent();
-        return toDto(user);
-    }
+//    public UserDto toDto(final GeoResult<User> geoResult) {
+//        final User user = geoResult.getContent();
+//        return toDto(user);
+//    }
 
 }

@@ -1,0 +1,24 @@
+@startuml
+participant Client
+boundary UserController
+control UserService
+control DistanceExternalService
+database MongoDb
+database DistanceMatrixAPI
+
+Client -> UserController: findClosestProvider()
+UserController -> UserService: findClosestAvailableProvider()
+UserService -> UserService: findClosestAvailableProviders()
+UserService -> MongoDb: geoNear()
+MongoDb --> UserService: closest available providers
+UserService -> DistanceExternalService: getClosestUser()
+DistanceExternalService -> DistanceExternalService: getOrigins()
+DistanceExternalService -> DistanceMatrixAPI: getDistanceMatrix()
+DistanceMatrixAPI --> DistanceExternalService: distances between providers and client
+DistanceExternalService ->DistanceExternalService: findClosest()
+DistanceExternalService --> UserService: closest provider
+UserService -> MongoDb: save()
+MongoDb --> UserService: provider with updated status
+UserService --> UserController: closest provider
+UserController --> Client: closest provider
+@enduml

@@ -22,6 +22,8 @@ public class LocationExchangeDto implements Serializable {
 
     private Role role;
 
+    private String consigneeId;
+
     @Valid
     private GeoPointDto location;
 

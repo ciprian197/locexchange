@@ -26,7 +26,6 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-webflux")
 
     compile("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
-    compile("org.springframework.boot:spring-boot-starter-integration")
     compile("org.springframework.boot:spring-boot-starter-validation")
     compile("io.netty:netty-transport-native-epoll:4.1.22.Final:linux-x86_64")
     compile("com.google.maps:google-maps-services:${googleMapsServices}")

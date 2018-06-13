@@ -41,6 +41,7 @@ public class ReactiveWebSocketProvider {
                     }
                 })
                 .subscribe();
+
         for (int i = 0; true; i++) {
             i++;
         }

@@ -1,0 +1,26 @@
+@startuml
+participant Client
+boundary WebSocketHandlerMapping
+control ClientConnectionWebSocketHandler
+control UserService
+entity WebSocketSessions
+entity AssigneesMap
+Client -> WebSocketHandlerMapping: connect
+WebSocketHandlerMapping --> Client: connection established
+Client -> WebSocketHandlerMapping: sendLocation
+WebSocketHandlerMapping -> ClientConnectionWebSocketHandler: handle()
+ClientConnectionWebSocketHandler -> ClientConnectionWebSocketHandler: getObjectFromString()
+ClientConnectionWebSocketHandler -> ClientConnectionWebSocketHandler: checkIfSessionIsSaved()
+ClientConnectionWebSocketHandler -> WebSocketSessions: putIfAbsent()
+alt putIfAbsent() returns null
+ClientConnectionWebSocketHandler -> AssigneesMap: putIfAbsent()
+end
+ClientConnectionWebSocketHandler -> ClientConnectionWebSocketHandler: sendMessageToProvider()
+alt there is no provider with given session id
+ClientConnectionWebSocketHandler --> Client: ConnectionException
+end
+ClientConnectionWebSocketHandler -> ClientConnectionWebSocketHandler: onDisconnect()
+ClientConnectionWebSocketHandler -> UserService: updateUserBySessionId()
+ClientConnectionWebSocketHandler -> WebSocketSessions: remove()
+ClientConnectionWebSocketHandler -> AssigneesMap: remove()
+@enduml

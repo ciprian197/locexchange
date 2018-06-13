@@ -1,0 +1,7 @@
+@startuml
+
+Client --> (Register)
+Client --> (Share location with provider)
+Client -> (Find closest provider)
+
+@enduml
