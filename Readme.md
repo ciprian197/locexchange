@@ -1,6 +1,9 @@
 #Build project
 .gradlew clean build
 
+#Start mongoDB localy
+sudo docker-compose up -d
+
 #Run project
 .gradlew clean bootRun
 
