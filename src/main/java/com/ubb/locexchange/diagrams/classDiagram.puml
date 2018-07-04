@@ -1,0 +1,93 @@
+@startuml
+
+class UserController
+class UserServiceImpl
+class DistanceExternalServiceImpl
+class UserMapper
+class GeoPointMapper
+class ReactiveWebSocketConfiguration
+class ClientConnectionWebSocketHandler
+class ProviderConnectionWebSocketHandler
+interface "ReactiveMongoRepository<T,E>" as MongoRepository_String_User
+interface UserService
+interface UserRepository
+interface DistanceExternalService
+interface WebSocketHandler
+
+UserService <|.. UserServiceImpl
+UserController o-down-- UserService
+UserServiceImpl o-- UserRepository
+MongoRepository_String_User <|-- UserRepository
+UserServiceImpl *-right- DistanceExternalService
+UserServiceImpl o-- UserMapper
+UserServiceImpl o-- GeoPointMapper
+UserMapper o-left- GeoPointMapper
+UserMapper *-- AddressMapper
+DistanceExternalService <|.. DistanceExternalServiceImpl
+
+WebSocketHandler <|.down. ClientConnectionWebSocketHandler
+WebSocketHandler <|.down. ProviderConnectionWebSocketHandler
+ReactiveWebSocketConfiguration *-right- ClientConnectionWebSocketHandler
+ReactiveWebSocketConfiguration *-left- ProviderConnectionWebSocketHandler
+ClientConnectionWebSocketHandler o-- UserService
+ProviderConnectionWebSocketHandler o-- UserService
+
++class UserController{
++createUser(userDto: Mono<UserDto>): Mono<UserDto>
++getClosestProvider(geoPointDto: Mono<GeoPointDto>): Mono<UserDto>
+}
+
++interface UserService{
+addUser(userDto: UserDto): Mono<UserDto>
+findClosestAvailableProvider(geoPointDto: GeoPointDto): Mono<UserDto>
+}
+
+~class UserServiceImpl{
+-Distance maxDistance;
+-ReactiveMongoTemplate mongoTemplate;
++...
+}
+
++interface UserRepository{
++...
+}
+
++interface DistanceExternalService{
+getClosestUser(...): User
+}
+
+~class DistanceExternalServiceImpl{
++...
+}
+
++class UserMapper{
++...
+}
+
++class GeoPointMapper{
++...
+}
+
++class AddressMapper{
++...
+}
+
+
++interface WebSocketHandler{
++handle(session: WebSocketSession): Mono<Void>
+}
+
++class ClientConnectionWebSocketHandler{
++...
+}
+
++class ProviderConnectionWebSocketHandler{
++...
+}
+
+class ReactiveWebSocketConfiguration{
++webSocketHandlerMapping(): HandlerMapping
++handlerAdapter(): WebSocketHandlerAdapter
+}
+
+@enduml

@@ -93,8 +93,8 @@ class UserServiceImpl implements UserService {
                 .publishOn(Schedulers.elastic())
                 .map(users -> distanceExternalService.getClosestUser(users, geoPointDto))
                 .timeout(Duration.ofMillis(MAXIMUM_COMPUTATION_DURATION_USING_EXTERNAL_SERVICE))
-                .doOnError(e -> log.info("Computing closest provider using Google Maps Service has failed, " +
-                        "will proceeed with fallback function"))
+                .doOnError(e -> log.info("Computing closest provider using Google Maps " +
+                        "Service has failed, will proceeed with fallback function"))
                 .onErrorResume(e -> findClosestAvailableProviderInternal(geoPointDto))
                 .flatMap(user -> {
                     final UpdateUserDto updateUserDto = UpdateUserDto.builder()
@@ -142,7 +142,6 @@ class UserServiceImpl implements UserService {
         nearQuery.num(queryResults);
         return nearQuery;
     }
-
 
     private Mono<User> getUserBySessionId(final String webSessionId) {
         return this.userRepository.findByWebSessionId(webSessionId)

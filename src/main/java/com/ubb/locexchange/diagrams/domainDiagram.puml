@@ -5,9 +5,9 @@ enum Role
 class User
 class Address
 
-User *-- Role
+User o-- Role
 User *-- Address
-User *-- UserStatus
+User o-- UserStatus
 
 class User {
 -String id

@@ -22,10 +22,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class UserServiceImplTest {
 
@@ -54,7 +55,7 @@ public class UserServiceImplTest {
     @Test
     public void findClosestAvailableProvider_externalCallIsOk_closestProvider() {
         // Given
-        final Flux<GeoResult<User>> geoResult = UserFactory.generateProviders()
+        final Flux<GeoResult<User>> geoResult = Flux.fromIterable(UserFactory.generateProviders())
                 .map(user -> new GeoResult<>(user, mock(Distance.class)));
         final GeoPointDto geoPointDto = GeoPointFactory.generateGeoPointDto();
         final User closestProvider = UserFactory.generateProvider();
@@ -64,6 +65,36 @@ public class UserServiceImplTest {
                 .thenReturn(geoResult);
         when(distanceExternalService.getClosestUser(any(), eq(geoPointDto)))
                 .thenReturn(closestProvider);
+        when(geoPointMapper.toPoint(geoPointDto))
+                .thenReturn(mock(Point.class));
+        when(userRepository.save(closestProvider))
+                .thenReturn(Mono.just(closestProvider));
+        when(userMapper.toDto(closestProvider))
+                .thenReturn(expected);
+
+        // When
+        final Mono<UserDto> provider = userService.findClosestAvailableProvider(geoPointDto);
+
+        // Then
+        StepVerifier.create(provider)
+                .expectNext(expected)
+                .verifyComplete();
+    }
+
+    @Test
+    public void findClosestAvailableProvider_externalCallThrowsException_closestProviderUsingDatabase() {
+        // Given
+        final List<User> providers = UserFactory.generateProviders();
+        final User closestProvider = providers.get(0);
+        final Flux<GeoResult<User>> geoResult = Flux.fromIterable(providers)
+                .map(user -> new GeoResult<>(user, mock(Distance.class)));
+        final GeoPointDto geoPointDto = GeoPointFactory.generateGeoPointDto();
+        final UserDto expected = mock(UserDto.class);
+
+        when(mongoTemplate.geoNear(any(NearQuery.class), eq(User.class)))
+                .thenReturn(geoResult);
+        doThrow(new RuntimeException())
+                .when(distanceExternalService).getClosestUser(any(), eq(geoPointDto));
         when(geoPointMapper.toPoint(geoPointDto))
                 .thenReturn(mock(Point.class));
         when(userRepository.save(closestProvider))

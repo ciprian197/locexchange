@@ -4,13 +4,17 @@ import com.ubb.locexchange.domain.Role;
 import com.ubb.locexchange.domain.User;
 import com.ubb.locexchange.domain.UserStatus;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
-import reactor.core.publisher.Flux;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class UserFactory {
 
-    public static Flux<User> generateProviders() {
-        return Flux.just(1, 2, 3)
-                .map(n -> userBuilder("ciprian" + n, Role.PROVIDER).build());
+    public static List<User> generateProviders() {
+        return Stream.of(1, 2, 3)
+                .map(n -> userBuilder("ciprian" + n, Role.PROVIDER).build())
+                .collect(Collectors.toList());
     }
 
     public static User generateProvider() {
