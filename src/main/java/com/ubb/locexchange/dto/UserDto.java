@@ -29,7 +29,7 @@ public class UserDto implements Serializable {
     private String webSessionId;
 
     @Length(min = 4, max = 15, message = "{username.invalid.length}")
-    @Pattern(regexp = USERNAME_PATTERN, message = "{username.invalid")
+    @Pattern(regexp = USERNAME_PATTERN, message = "{username.invalid}")
     private String username;
 
     @Pattern(regexp = NAME_PATTERN, message = "{firstName.invalid}")

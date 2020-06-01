@@ -8,8 +8,7 @@ import lombok.experimental.UtilityClass;
 @AllArgsConstructor
 public enum ErrorType {
 
-    VALIDATION_ERROR(Value.VALIDATION_ERROR,
-            "Error occured while validating input data"),
+    VALIDATION_ERROR(Value.VALIDATION_ERROR, "Error occured while validating input data"),
     CAN_NOT_FIND_AVAILABLE_PROVIDERS(Value.CAN_NOT_FIND_AVAILABLE_PROVIDERS,
             "Can not find available providers for the given location"),
     USER_DOES_NOT_EXIST(Value.USER_DOES_NOT_EXIST, "User does not exist"),

@@ -1,17 +1,17 @@
 server:
-    port: 8080
+  port: 8080
 spring:
-    data:
-        mongodb:
-            uri: mongodb://localhost:27017/locexchange
-distance:
-    maximum:
-        allowed: 10
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/locexchange
+      auto-index-creation: true
+
+distance.maximum.allowed: 10
 
 logging:
   level:
-    locexchange: "INFO"
+    root: info
 
 google-maps:
-    api:
-        key:
+  api:
+    key:

@@ -51,4 +51,5 @@ nbdist/
 ### Gradle ###
 .gradle/
 build/
-!gradle/wrapper/gradle-wrapper.jar
+gradle/wrapper/gradle-wrapper.jar
+gradlew.bat
