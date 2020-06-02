@@ -11,7 +11,7 @@ public interface UserService {
 
     Mono<UserDto> updateUserBySessionId(String webSessionId, UpdateUserDto updateUserDto);
 
-    Mono<UserDto> updateUser(String username, UpdateUserDto updateUserDto);
+    Mono<UserDto> updateUserLocation(String userId, GeoPointDto location);
 
     Mono<UserDto> findClosestAvailableProvider(GeoPointDto geoPointDto);
 

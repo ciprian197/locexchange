@@ -1,7 +1,6 @@
 package com.ubb.locexchange.dto;
 
 
-import com.ubb.locexchange.domain.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,13 +12,9 @@ import javax.validation.Valid;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LocationExchangeDto {
+public class ProviderLocationExchangeDto {
 
-    private String username;
-
-    private Role role;
-
-    private String consigneeId;
+    private String userId;
 
     @Valid
     private GeoPointDto location;

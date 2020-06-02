@@ -1,4 +1,4 @@
-package com.ubb.locexchange.websockets;
+package com.ubb.locexchange.client;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,19 +14,15 @@ import java.util.Map;
 public class ReactiveWebSocketConfiguration {
 
     private final ClientConnectionWebSocketHandler clientConnectionWebSocketHandler;
-    private final ProviderConnectionWebSocketHandler providerConnectionWebSocketHandler;
 
-    public ReactiveWebSocketConfiguration(final ClientConnectionWebSocketHandler clientConnectionWebSocketHandler,
-                                          final ProviderConnectionWebSocketHandler providerConnectionWebSocketHandler) {
+    public ReactiveWebSocketConfiguration(final ClientConnectionWebSocketHandler clientConnectionWebSocketHandler) {
         this.clientConnectionWebSocketHandler = clientConnectionWebSocketHandler;
-        this.providerConnectionWebSocketHandler = providerConnectionWebSocketHandler;
     }
 
     @Bean
     public HandlerMapping webSocketHandlerMapping() {
         final Map<String, WebSocketHandler> map = new HashMap<>();
         map.put("/client", clientConnectionWebSocketHandler);
-        map.put("/provider", providerConnectionWebSocketHandler);
 
         final SimpleUrlHandlerMapping handlerMapping = new SimpleUrlHandlerMapping();
         handlerMapping.setOrder(1);

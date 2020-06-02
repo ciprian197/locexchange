@@ -79,9 +79,9 @@ class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Mono<UserDto> updateUser(final String username, final UpdateUserDto updateUserDto) {
-        return getUserByUsername(username)
-                .map(user -> updateUser(user, updateUserDto))
+    public Mono<UserDto> updateUserLocation(final String userId, final GeoPointDto location) {
+        return getUserById(userId)
+                .map(user -> updateUser(user, location))
                 .flatMap(userRepository::save)
                 .map(userMapper::toDto);
     }
@@ -150,13 +150,13 @@ class UserServiceImpl implements UserService {
                 ));
     }
 
-    private Mono<User> getUserByUsername(final String username) {
-        return this.userRepository.findByUsername(username)
+    private Mono<User> getUserById(final String id) {
+        return this.userRepository.findById(id)
                 .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(USER_DOES_NOT_EXIST,
-                        String.format("Could not find user with username %s ", username))
-                ));
+                        String.format("Could not find user with id %s ", id))));
     }
 
+    //TODO Will be updated after client user side logic is updated
     private User updateUser(final User user, final UpdateUserDto updateUserDto) {
         final String webSessionId = updateUserDto.getWebSessionId();
         if (webSessionId != null) {
@@ -173,6 +173,14 @@ class UserServiceImpl implements UserService {
         final UserStatus userStatus = updateUserDto.getUserStatus();
         if (userStatus != null) {
             user.setUserStatus(userStatus);
+        }
+        return user;
+    }
+
+    private User updateUser(final User user, final GeoPointDto location) {
+        if (location != null) {
+            userValidator.validateUserForLocationUpdate(user);
+            user.setLocation(geoPointMapper.toEntity(location));
         }
         return user;
     }
