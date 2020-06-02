@@ -1,4 +1,4 @@
-package com.ubb.locexchange.websockets;
+package com.ubb.locexchange.client;
 
 
 import com.ubb.locexchange.domain.Role;

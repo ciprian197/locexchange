@@ -1,8 +1,7 @@
-package com.ubb.locexchange.websockets;
+package com.ubb.locexchange.client;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.util.Pair;
 import org.springframework.web.reactive.socket.WebSocketSession;
 
 import java.util.concurrent.ConcurrentHashMap;
