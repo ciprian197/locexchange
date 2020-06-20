@@ -25,7 +25,7 @@ public class UserFactory {
         return User.builder()
                 .username(username)
                 .role(role)
-                .userStatus(UserStatus.CONNECTED)
+                .status(UserStatus.CONNECTED)
                 .firstName("Ciprian")
                 .lastName("Popescu")
                 .webSessionId("1234567")

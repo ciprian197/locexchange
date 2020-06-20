@@ -1,8 +1,8 @@
 package com.ubb.locexchange.exception;
 
-public class ResourceNotFoundExcetion extends RestRuntimeException {
+import com.ubb.locexchange.exception.error.ErrorType;
 
-    private static final long serialVersionUID = -1913574523460237681L;
+public class ResourceNotFoundExcetion extends RestRuntimeException {
 
     public ResourceNotFoundExcetion(final ErrorType errorType, final String message) {
         super(errorType, message);

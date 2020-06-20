@@ -1,4 +1,4 @@
-package com.ubb.locexchange.service;
+package com.ubb.locexchange.service.distance;
 
 import com.google.maps.DistanceMatrixApi;
 import com.google.maps.GeoApiContext;
@@ -31,9 +31,8 @@ class DistanceExternalServiceImpl implements DistanceExternalService {
                 .apiKey(googleApiKey).build();
 
         try {
-            return users.get(
-                    findClosest(DistanceMatrixApi.getDistanceMatrix(geoApiContext, getOrigins(users),
-                            new String[]{geoPointDtoAsString(point)}).await()));
+            return users.get(findClosest(DistanceMatrixApi.getDistanceMatrix(geoApiContext, getOrigins(users),
+                    new String[]{geoPointDtoAsString(point)}).await()));
         } catch (final Exception e) {
             // Wrap caught exception into a RuntimeException to be able to handle it inside of the reactive chain
             throw Exceptions.propagate(e);
