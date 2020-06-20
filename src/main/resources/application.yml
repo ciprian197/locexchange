@@ -4,7 +4,8 @@ spring:
       uri: mongodb://localhost:27017/locexchange
       auto-index-creation: true
   rsocket.server:
-    transport: tcp
+    mapping-path: /rsocket
+    transport: websocket
     port: 7000
 
 distance.maximum.allowed: 10

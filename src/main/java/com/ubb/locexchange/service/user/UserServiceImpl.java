@@ -1,4 +1,4 @@
-package com.ubb.locexchange.service;
+package com.ubb.locexchange.service.user;
 
 import com.ubb.locexchange.domain.User;
 import com.ubb.locexchange.domain.UserStatus;
@@ -9,7 +9,7 @@ import com.ubb.locexchange.exception.ResourceNotFoundExcetion;
 import com.ubb.locexchange.mapper.GeoPointMapper;
 import com.ubb.locexchange.mapper.UserMapper;
 import com.ubb.locexchange.repository.UserRepository;
-import com.ubb.locexchange.service.validator.UserValidator;
+import com.ubb.locexchange.service.distance.DistanceExternalService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.geo.Distance;
@@ -28,13 +28,15 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Duration;
 
 import static com.ubb.locexchange.domain.Role.PROVIDER;
-import static com.ubb.locexchange.domain.UserStatus.*;
-import static com.ubb.locexchange.exception.ErrorType.CAN_NOT_FIND_AVAILABLE_PROVIDERS;
-import static com.ubb.locexchange.exception.ErrorType.USER_DOES_NOT_EXIST;
+import static com.ubb.locexchange.domain.User.Property.*;
+import static com.ubb.locexchange.domain.UserStatus.CONNECTED;
+import static com.ubb.locexchange.domain.UserStatus.IN_MISSION;
+import static com.ubb.locexchange.exception.error.GeneralErrorType.CAN_NOT_FIND_AVAILABLE_PROVIDERS;
+import static com.ubb.locexchange.exception.error.GeneralErrorType.USER_NOT_FOUND;
 
 @Slf4j
 @Service
-class UserServiceImpl implements UserService {
+class UserServiceImpl implements UserInternalService {
 
     private static final int MAXIMUM_QUERY_RESULTS = 5;
     private static final int MAXIMUM_COMPUTATION_DURATION_USING_EXTERNAL_SERVICE = 3000;
@@ -87,33 +89,22 @@ class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Mono<UserDto> findClosestAvailableProvider(final GeoPointDto geoPointDto) {
+    public Mono<User> getClosestAvailableProvider(final GeoPointDto geoPointDto) {
         return this.findClosestAvailableProviders(geoPointDto, MAXIMUM_QUERY_RESULTS)
                 .collectList()
                 .publishOn(Schedulers.elastic())
                 .map(users -> distanceExternalService.getClosestUser(users, geoPointDto))
                 .timeout(Duration.ofMillis(MAXIMUM_COMPUTATION_DURATION_USING_EXTERNAL_SERVICE))
-                .doOnError(e -> log.info("Computing closest provider using Google Maps " +
-                        "Service has failed, will proceeed with fallback function"))
+                .doOnError(e -> log.warn("Computing closest provider using Third Party Service has failed, will " +
+                        "proceed with fallback computation"))
                 .onErrorResume(e -> findClosestAvailableProviderInternal(geoPointDto))
-                .flatMap(user -> {
-                    final UpdateUserDto updateUserDto = UpdateUserDto.builder()
-                            .userStatus(IN_MISSION).build();
-                    return userRepository.save(updateUser(user, updateUserDto));
-                })
-                .map(userMapper::toDto);
+                .flatMap(this::markProviderAsInMission);
     }
 
     @Override
-    public Mono<UserDto> removeWebSessionId(final String webSessionId) {
-        return getUserBySessionId(webSessionId)
-                .map(user -> {
-                    user.setWebSessionId(null);
-                    user.setUserStatus(DISCONNECTED);
-                    return user;
-                })
-                .flatMap(userRepository::save)
-                .map(userMapper::toDto);
+    public Mono<User> getUser(final String id) {
+        return userRepository.findById(id)
+                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(USER_NOT_FOUND, String.format("User(id=%s) not found", id))));
     }
 
     private Mono<User> findClosestAvailableProviderInternal(final GeoPointDto geoPointDto) {
@@ -133,26 +124,32 @@ class UserServiceImpl implements UserService {
     }
 
     private NearQuery createNearQuery(final GeoPointDto pointDto, final int queryResults) {
-        final Query query = new Query(Criteria.where("role").is(PROVIDER).and("userStatus").is(CONNECTED));
-        query.fields().include("firstName").include("lastName").include("location");
+        final Query query = new Query(Criteria.where(ROLE.getValue()).is(PROVIDER).and(STATUS.getValue()).is(CONNECTED));
+        query.fields().include(FIRST_NAME.getValue()).include(LAST_NAME.getValue()).include(LOCATION.getValue());
 
         final Point point = geoPointMapper.toPoint(pointDto);
         final NearQuery nearQuery = NearQuery.near(point).maxDistance(maxDistance);
+
         nearQuery.query(query);
-        nearQuery.num(queryResults);
+        nearQuery.limit(queryResults);
         return nearQuery;
     }
 
     private Mono<User> getUserBySessionId(final String webSessionId) {
         return this.userRepository.findByWebSessionId(webSessionId)
-                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(USER_DOES_NOT_EXIST,
-                        String.format("Could not find user with web session id %s ", webSessionId))
-                ));
+                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(USER_NOT_FOUND,
+                        String.format("User(webSessionId=%s) not found", webSessionId))));
+    }
+
+    private Mono<? extends User> markProviderAsInMission(final User user) {
+        final UpdateUserDto updateUserDto = UpdateUserDto.builder()
+                .userStatus(IN_MISSION).build();
+        return userRepository.save(updateUser(user, updateUserDto));
     }
 
     private Mono<User> getUserById(final String id) {
         return this.userRepository.findById(id)
-                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(USER_DOES_NOT_EXIST,
+                .switchIfEmpty(Mono.error(new ResourceNotFoundExcetion(USER_NOT_FOUND,
                         String.format("Could not find user with id %s ", id))));
     }
 
@@ -161,7 +158,7 @@ class UserServiceImpl implements UserService {
         final String webSessionId = updateUserDto.getWebSessionId();
         if (webSessionId != null) {
             user.setWebSessionId(webSessionId);
-            user.setUserStatus(UserStatus.CONNECTED);
+            user.setStatus(UserStatus.CONNECTED);
         }
 
         final GeoPointDto location = updateUserDto.getLocation();
@@ -172,7 +169,7 @@ class UserServiceImpl implements UserService {
 
         final UserStatus userStatus = updateUserDto.getUserStatus();
         if (userStatus != null) {
-            user.setUserStatus(userStatus);
+            user.setStatus(userStatus);
         }
         return user;
     }
@@ -181,6 +178,7 @@ class UserServiceImpl implements UserService {
         if (location != null) {
             userValidator.validateUserForLocationUpdate(user);
             user.setLocation(geoPointMapper.toEntity(location));
+            user.setStatus(CONNECTED);
         }
         return user;
     }

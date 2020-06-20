@@ -46,6 +46,21 @@ public class User {
     private GeoJsonPoint location;
 
     @Builder.Default
-    private UserStatus userStatus = UserStatus.DISCONNECTED;
+    private UserStatus status = UserStatus.DISCONNECTED;
+
+    @Getter
+    @AllArgsConstructor
+    public enum Property {
+
+        ID("id"),
+        FIRST_NAME("firstName"),
+        LAST_NAME("lastName"),
+        ROLE("role"),
+        STATUS("status"),
+        LOCATION("location");
+
+        private final String value;
+
+    }
 
 }
