@@ -1,8 +1,8 @@
 package com.ubb.locexchange.exception;
 
-public class ConnectionException extends RestRuntimeException  {
+import com.ubb.locexchange.exception.error.ErrorType;
 
-    private static final long serialVersionUID = -846494365629431441L;
+public class ConnectionException extends RestRuntimeException {
 
     public ConnectionException(final ErrorType errorType, final String message) {
         super(errorType, message);

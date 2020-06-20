@@ -1,4 +1,4 @@
-package com.ubb.locexchange.client;
+package com.ubb.locexchange.websocket;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

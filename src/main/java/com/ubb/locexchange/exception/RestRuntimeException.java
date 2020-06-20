@@ -1,14 +1,13 @@
 package com.ubb.locexchange.exception;
 
 
+import com.ubb.locexchange.exception.error.ErrorType;
 import lombok.Getter;
 
 import java.util.Optional;
 
 @Getter
 public abstract class RestRuntimeException extends RuntimeException {
-
-    private static final long serialVersionUID = -8081351967598635610L;
 
     private final ErrorType errorType;
 

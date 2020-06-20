@@ -1,11 +1,11 @@
-package com.ubb.locexchange.client;
+package com.ubb.locexchange.websocket;
 
 import com.ubb.locexchange.domain.UserStatus;
 import com.ubb.locexchange.dto.LocationExchangeDto;
 import com.ubb.locexchange.dto.UpdateUserDto;
 import com.ubb.locexchange.exception.ConnectionException;
-import com.ubb.locexchange.exception.ErrorType;
-import com.ubb.locexchange.service.UserService;
+import com.ubb.locexchange.exception.error.GeneralErrorType;
+import com.ubb.locexchange.service.user.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.WebSocketHandler;
@@ -50,7 +50,7 @@ public class ClientConnectionWebSocketHandler implements WebSocketHandler {
     private Disposable sendMessageToProvider(final LocationExchangeDto dto) {
         final WebSocketSession session = webSocketSessions.get(dto.getConsigneeId());
         if (session == null) {
-            throw new ConnectionException(ErrorType.SESSION_DOES_NOT_EXIST,
+            throw new ConnectionException(GeneralErrorType.SESSION_NOT_FOUND,
                     String.format("Can not send message to session %s, the session does not exists",
                             dto.getConsigneeId()));
         }

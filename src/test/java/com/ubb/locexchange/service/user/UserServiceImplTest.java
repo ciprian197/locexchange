@@ -1,4 +1,4 @@
-package com.ubb.locexchange.service;
+package com.ubb.locexchange.service.user;
 
 import com.ubb.locexchange.domain.User;
 import com.ubb.locexchange.dto.GeoPointDto;
@@ -8,7 +8,7 @@ import com.ubb.locexchange.factory.UserFactory;
 import com.ubb.locexchange.mapper.GeoPointMapper;
 import com.ubb.locexchange.mapper.UserMapper;
 import com.ubb.locexchange.repository.UserRepository;
-import com.ubb.locexchange.service.validator.UserValidator;
+import com.ubb.locexchange.service.distance.DistanceExternalService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -69,15 +69,13 @@ public class UserServiceImplTest {
                 .thenReturn(mock(Point.class));
         when(userRepository.save(closestProvider))
                 .thenReturn(Mono.just(closestProvider));
-        when(userMapper.toDto(closestProvider))
-                .thenReturn(expected);
 
         // When
-        final Mono<UserDto> provider = userService.findClosestAvailableProvider(geoPointDto);
+        final Mono<User> provider = userService.getClosestAvailableProvider(geoPointDto);
 
         // Then
         StepVerifier.create(provider)
-                .expectNext(expected)
+                .expectNext(closestProvider)
                 .verifyComplete();
     }
 
@@ -99,15 +97,13 @@ public class UserServiceImplTest {
                 .thenReturn(mock(Point.class));
         when(userRepository.save(closestProvider))
                 .thenReturn(Mono.just(closestProvider));
-        when(userMapper.toDto(closestProvider))
-                .thenReturn(expected);
 
         // When
-        final Mono<UserDto> provider = userService.findClosestAvailableProvider(geoPointDto);
+        final Mono<User> provider = userService.getClosestAvailableProvider(geoPointDto);
 
         // Then
         StepVerifier.create(provider)
-                .expectNext(expected)
+                .expectNext(closestProvider)
                 .verifyComplete();
     }
 

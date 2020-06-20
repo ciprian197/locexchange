@@ -1,4 +1,4 @@
-package com.ubb.locexchange.service;
+package com.ubb.locexchange.service.distance;
 
 import com.ubb.locexchange.domain.User;
 import com.ubb.locexchange.dto.GeoPointDto;

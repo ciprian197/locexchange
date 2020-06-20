@@ -1,8 +1,9 @@
 package com.ubb.locexchange.exception;
 
-public class InvalidDataException extends RestRuntimeException {
+import com.ubb.locexchange.exception.error.ErrorType;
+import com.ubb.locexchange.exception.error.GeneralErrorType;
 
-    private static final long serialVersionUID = 1428297523623293134L;
+public class InvalidDataException extends RestRuntimeException {
 
     public InvalidDataException(final ErrorType errorType, final String message) {
         super(errorType, message);

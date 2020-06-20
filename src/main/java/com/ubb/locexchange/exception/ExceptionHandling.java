@@ -1,5 +1,6 @@
 package com.ubb.locexchange.exception;
 
+import com.ubb.locexchange.exception.error.GeneralErrorType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -18,7 +19,7 @@ public class ExceptionHandling {
                 .map(FieldError::getDefaultMessage)
                 .reduce((a, b) -> a + "\n" + b)
                 .orElse("Cannot display errors");
-        return new ResponseEntity<>(new ErrorView(ErrorType.VALIDATION_ERROR, errorMessage), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ErrorView(GeneralErrorType.VALIDATION_ERROR, errorMessage), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
